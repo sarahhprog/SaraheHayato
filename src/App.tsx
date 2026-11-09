@@ -104,9 +104,9 @@ function Header({ page, go }: { page: Page; go: (page: Page) => void }) {
   const [open, setOpen] = useState(false);
   const nav: [Page, string][] = [
     ["home", "Nossa história"],
-    ["rsvp", "RSVP"],
-    ["gifts", "Presentes"],
-    ["info", "Informações"],
+    ["rsvp", "Confirmar presença"],
+    ["gifts", "Lista de presentes"],
+    ["info", "Informações e localização"],
   ];
   return (
     <header className="header">
@@ -602,7 +602,7 @@ function Info() {
     <main>
       <PageIntro
         eyebrow="Para o grande dia"
-        title="Informações"
+        title="Informações e localização"
         text="Tudo o que você precisa saber para viver esta tarde conosco."
       />
       <section className="venue">
@@ -996,9 +996,9 @@ function Footer({ go }: { go: (p: Page) => void }) {
       <p>24 de julho de 2027 · Espaço Bodocó</p>
       <div className="footer-links">
         <button onClick={() => go("home")}>Nossa história</button>
-        <button onClick={() => go("rsvp")}>RSVP</button>
-        <button onClick={() => go("gifts")}>Presentes</button>
-        <button onClick={() => go("info")}>Informações</button>
+        <button onClick={() => go("rsvp")}>Confirmar presença</button>
+        <button onClick={() => go("gifts")}>Lista de presentes</button>
+        <button onClick={() => go("info")}>Informações e localização</button>
       </div>
       <button className="admin-link" onClick={() => go("admin")}>
         Acesso administrativo

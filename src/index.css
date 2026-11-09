@@ -26,7 +26,8 @@
     background: var(--ivory);
     color: var(--ink);
     font-family: Montserrat, sans-serif;
-    font-size: 14px;
+    font-size: 16px;
+    line-height: 1.6;
   }
   button,
   input,
@@ -114,7 +115,7 @@
   color: var(--ink);
   text-transform: uppercase;
   letter-spacing: 0.13em;
-  font-size: 10px;
+  font-size: 11px;
   padding: 9px 0;
   position: relative;
 }
@@ -136,9 +137,9 @@
   background: var(--green);
   color: var(--ivory);
   border: 1px solid var(--green);
-  padding: 14px 19px;
+  padding: 15px 22px;
   text-transform: uppercase;
-  font-size: 9px;
+  font-size: 11px;
   letter-spacing: 0.12em;
 }
 .menu-button {
@@ -161,7 +162,7 @@
 .eyebrow {
   text-transform: uppercase;
   letter-spacing: 0.28em;
-  font-size: 9px;
+  font-size: 11px;
   font-weight: 600;
   color: var(--gold);
   margin-bottom: 22px;
@@ -202,13 +203,13 @@
   margin: 0 14px;
 }
 .hero-date {
-  font: 500 23px "Cormorant Garamond";
+  font: 500 28px "Cormorant Garamond";
   letter-spacing: 0.28em;
   margin: 22px 0 6px;
   color: var(--green);
 }
 .hero-place {
-  font-size: 10px;
+  font-size: 12px;
   text-transform: uppercase;
   letter-spacing: 0.17em;
   margin-bottom: 34px;
@@ -223,7 +224,7 @@
   border-bottom: 1px solid var(--green);
   color: var(--green);
   padding: 8px 0;
-  font: 600 9px Montserrat;
+  font: 600 11px Montserrat;
   text-transform: uppercase;
   letter-spacing: 0.16em;
 }
@@ -436,7 +437,7 @@
   padding: 15px 23px;
   text-transform: uppercase;
   letter-spacing: 0.15em;
-  font-size: 9px;
+  font-size: 11px;
   font-weight: 600;
   transition: 0.2s;
 }
@@ -484,7 +485,7 @@
   margin-bottom: 18px;
 }
 .page-intro > p:last-child {
-  font: italic 19px/1.5 "Cormorant Garamond";
+  font: italic 20px/1.5 "Cormorant Garamond";
   max-width: 570px;
 }
 .rsvp-shell {
@@ -515,7 +516,7 @@
   gap: 8px;
   text-transform: uppercase;
   letter-spacing: 0.12em;
-  font-size: 8px;
+  font-size: 10px;
   color: #8b8f88;
 }
 .steps span {
@@ -565,7 +566,7 @@
   text-align: left;
   text-transform: uppercase;
   letter-spacing: 0.12em;
-  font-size: 8px;
+  font-size: 10px;
   font-weight: 600;
   margin: 30px 0 22px;
 }
@@ -585,7 +586,7 @@ textarea:focus {
 }
 .form-error {
   color: var(--wine);
-  font-size: 11px;
+  font-size: 13px;
 }
 .invite-card small {
   display: block;
@@ -629,7 +630,7 @@ textarea:focus {
 .choice button {
   border: 1px solid var(--line);
   background: transparent;
-  font-size: 9px;
+  font-size: 11px;
   padding: 10px 12px;
 }
 .choice .yes.selected {
@@ -655,7 +656,7 @@ textarea:focus {
   border-bottom: 1px solid var(--line);
 }
 .review-list b {
-  font-size: 9px;
+  font-size: 10px;
   text-transform: uppercase;
   letter-spacing: 0.08em;
 }
@@ -673,7 +674,7 @@ textarea:focus {
   text-align: center;
   max-width: 600px;
   margin: 28px auto 0;
-  font-size: 9px;
+  font-size: 11px;
   color: #797d78;
 }
 .gifts-section {
@@ -691,7 +692,7 @@ textarea:focus {
   border: 1px solid var(--line);
   color: var(--green);
   padding: 10px 18px;
-  font-size: 9px;
+  font-size: 11px;
   text-transform: uppercase;
   letter-spacing: 0.12em;
 }
@@ -768,7 +769,7 @@ textarea:focus {
   border: 0;
   border-bottom: 1px solid currentColor;
   text-transform: uppercase;
-  font-size: 8px;
+  font-size: 10px;
   letter-spacing: 0.12em;
   padding: 5px 0;
 }
