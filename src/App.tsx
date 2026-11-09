@@ -2,6 +2,41 @@ import { useEffect, useMemo, useState } from "react";
 
 type Page = "home" | "rsvp" | "gifts" | "info" | "admin";
 type GuestStatus = "pending" | "yes" | "no";
+type AdminGuestStatus = "Confirmado" | "Não irá" | "Pendente" | "Cancelado";
+type AdminGuest = {
+  id: string;
+  name: string;
+  code: string;
+  group: string;
+  status: AdminGuestStatus;
+  responseDate: string;
+  notes: string;
+};
+type AdminInvite = { id: string; code: string; group: string };
+type AdminGift = (typeof initialGifts)[number] & {
+  description?: string;
+  status?: "Disponível" | "Indisponível";
+  purchased?: number;
+};
+
+function useStoredState<T>(key: string, initialValue: T) {
+  const [value, setValue] = useState<T>(() => {
+    const stored = window.localStorage.getItem(key);
+    return stored ? (JSON.parse(stored) as T) : initialValue;
+  });
+  useEffect(() => {
+    window.localStorage.setItem(key, JSON.stringify(value));
+  }, [key, value]);
+  return [value, setValue] as const;
+}
+
+const initialAdminGuests: AdminGuest[] = [
+  { id: "001", name: "Akira Nakamura", code: "SH2027", group: "Família Nakamura", status: "Confirmado", responseDate: "2026-11-09", notes: "" },
+  { id: "002", name: "Emi Nakamura", code: "SH2027", group: "Família Nakamura", status: "Pendente", responseDate: "", notes: "" },
+  { id: "003", name: "Kenji Nakamura", code: "SH2027", group: "Família Nakamura", status: "Pendente", responseDate: "", notes: "" },
+  { id: "004", name: "Marina Oliveira", code: "AMSTERDAM", group: "Marina & Rafael", status: "Confirmado", responseDate: "2026-11-09", notes: "" },
+  { id: "005", name: "Rafael Oliveira", code: "AMSTERDAM", group: "Marina & Rafael", status: "Não irá", responseDate: "2026-11-09", notes: "" },
+];
 
 const photos = {
   couple:
@@ -15,6 +50,19 @@ const photos = {
   table:
     "https://images.unsplash.com/photo-1519225421980-715cb0215aed?auto=format&fit=crop&w=1200&q=85",
 };
+const defaultSiteContent = {
+  storyTitle: "Do acaso, floresceu o amor.",
+  story: "Nos encontramos em uma tarde que parecia comum. Entre conversas longas, cafés sem pressa e viagens improvisadas, descobrimos um no outro um lugar para chamar de casa.",
+  giftMessage: "Sua presença é o nosso maior presente.",
+  venue: "Espaço Bodocó",
+  address: "Estrada Municipal do Campo Verde, 420 — São Paulo — SP",
+};
+const defaultSiteGallery = [
+  { id: "couple", label: "Foto principal", url: photos.couple },
+  { id: "greenhouse", label: "Nossa história", url: photos.greenhouse },
+  { id: "garden", label: "Pedido", url: photos.garden },
+  { id: "table", label: "Celebração", url: photos.table },
+];
 
 const initialGifts = [
   {
@@ -166,6 +214,9 @@ function Countdown() {
 }
 
 function Home({ go }: { go: (p: Page) => void }) {
+  const [siteContent] = useStoredState("sh-site-content", defaultSiteContent);
+  const [gallery] = useStoredState("sh-site-gallery", defaultSiteGallery);
+  const image = (index: number, fallback: string) => gallery[index]?.url ?? fallback;
   return (
     <main>
       <section className="hero">
@@ -181,14 +232,12 @@ function Home({ go }: { go: (p: Page) => void }) {
             <span />
           </div>
           <p className="hero-date">24 · 07 · 2027</p>
-          <p className="hero-place">
-            Espaço Bodocó <i>—</i> 15 horas
-          </p>
+          <p className="hero-place">{siteContent.venue} <i>—</i> 15 horas</p>
           <button className="text-link" onClick={() => go("rsvp")}>
             Confirme sua presença <b>→</b>
           </button>
         </div>
-        <div className="hero-photo" style={{ backgroundImage: `url(${photos.couple})` }}>
+        <div className="hero-photo" style={{ backgroundImage: `url(${image(0, photos.couple)})` }}>
           <span className="photo-credit">Foto: Tim Mossholder · Unsplash</span>
         </div>
         <div className="hero-side">
@@ -207,20 +256,13 @@ function Home({ go }: { go: (p: Page) => void }) {
 
       <section className="story-section">
         <div className="story-photo frame">
-          <img src={photos.greenhouse} alt="Entrada de uma estufa botânica" />
+          {image(1, photos.greenhouse) && <img src={image(1, photos.greenhouse)} alt="Entrada de uma estufa botânica" />}
           <span>01</span>
         </div>
         <div className="story-copy">
           <p className="eyebrow">Nossa história</p>
-          <h2>
-            Do acaso,
-            <br />
-            <em>floresceu o amor.</em>
-          </h2>
-          <p>
-            Nos encontramos em uma tarde que parecia comum. Entre conversas longas, cafés sem pressa
-            e viagens improvisadas, descobrimos um no outro um lugar para chamar de casa.
-          </p>
+          <h2>{siteContent.storyTitle}</h2>
+          <p>{siteContent.story}</p>
           <p>
             Sete anos depois, seguimos escolhendo dividir o cotidiano, os sonhos e a vontade de
             conhecer o mundo — sempre juntos.
@@ -246,17 +288,28 @@ function Home({ go }: { go: (p: Page) => void }) {
           <p className="location">Hortus Botanicus · 18.09.2025</p>
         </div>
         <div className="proposal-image">
-          <img src={photos.garden} alt="Jardim botânico e sua vegetação" />
+          {image(2, photos.garden) && <img src={image(2, photos.garden)} alt="Jardim botânico e sua vegetação" />}
         </div>
       </section>
 
+      {gallery.slice(defaultSiteGallery.length).some((photo) => photo.url) && (
+        <section className="managed-gallery">
+          <p className="script">memórias</p>
+          <h2>Mais momentos da nossa história</h2>
+          <div className="managed-gallery-grid">
+            {gallery.slice(defaultSiteGallery.length).filter((photo) => photo.url).map((photo) => (
+              <figure key={photo.id}>
+                <img src={photo.url} alt={photo.label} />
+                <figcaption>{photo.label}</figcaption>
+              </figure>
+            ))}
+          </div>
+        </section>
+      )}
+
       <section className="invitation">
         <p className="script">celebre conosco</p>
-        <h2>
-          Será ainda mais bonito
-          <br />
-          ter você por perto.
-        </h2>
+        <h2>{siteContent.giftMessage}</h2>
         <button className="button primary" onClick={() => go("rsvp")}>
           Confirmar presença
         </button>
@@ -282,15 +335,49 @@ function RSVP() {
   const [error, setError] = useState("");
   const [answers, setAnswers] = useState<Record<string, GuestStatus>>({});
   const [step, setStep] = useState<"identify" | "answer" | "review" | "success">("identify");
+  const submitResponses = () => {
+    if (!group) return;
+    const stored = window.localStorage.getItem("sh-admin-guests");
+    const currentGuests: AdminGuest[] = stored ? JSON.parse(stored) : initialAdminGuests;
+    const updatedGuests = currentGuests.map((guest) => {
+      if (!group.guests.includes(guest.name)) return guest;
+      const answer = answers[guest.name];
+      if (answer !== "yes" && answer !== "no") return guest;
+      return {
+        ...guest,
+        status: answer === "yes" ? "Confirmado" : "Não irá",
+        responseDate: new Date().toISOString().slice(0, 10),
+      };
+    });
+    window.localStorage.setItem("sh-admin-guests", JSON.stringify(updatedGuests));
+    setStep("success");
+  };
   const findInvite = (e: React.FormEvent) => {
     e.preventDefault();
-    const found = groups[code.trim().toUpperCase()];
+    const inviteCode = code.trim().toUpperCase();
+    const storedInvites = window.localStorage.getItem("sh-admin-invites");
+    const storedGuests = window.localStorage.getItem("sh-admin-guests");
+    const registeredInvite = storedInvites
+      ? (JSON.parse(storedInvites) as AdminInvite[]).find((invite) => invite.code === inviteCode)
+      : undefined;
+    const registeredGuests = storedGuests ? (JSON.parse(storedGuests) as AdminGuest[]) : initialAdminGuests;
+    const registeredMembers = registeredInvite
+      ? registeredGuests.filter((guest) => guest.code === inviteCode && guest.status !== "Cancelado")
+      : [];
+    const found = storedInvites
+      ? registeredInvite && registeredMembers.length
+        ? { invite: registeredInvite.group, guests: registeredMembers.map((guest) => guest.name) }
+        : undefined
+      : groups[inviteCode];
     if (!found) {
       setError("Não encontramos este convite. Confira o código e tente novamente.");
       return;
     }
     setGroup(found);
-    setAnswers(Object.fromEntries(found.guests.map((g) => [g, "pending"])));
+    setAnswers(Object.fromEntries(found.guests.map((guest) => {
+      const current = registeredGuests.find((item) => item.name === guest && item.code === inviteCode);
+      return [guest, current?.status === "Confirmado" ? "yes" : current?.status === "Não irá" ? "no" : "pending"];
+    })));
     setError("");
     setStep("answer");
   };
@@ -411,7 +498,7 @@ function RSVP() {
               <button className="button ghost" onClick={() => setStep("answer")}>
                 Editar
               </button>
-              <button className="button primary" onClick={() => setStep("success")}>
+              <button className="button primary" onClick={submitResponses}>
                 Enviar confirmação
               </button>
             </div>
@@ -452,15 +539,21 @@ function Gifts() {
   const [selected, setSelected] = useState<(typeof initialGifts)[number] | null>(null);
   const [payment, setPayment] = useState<"pix" | "card">("pix");
   const [paid, setPaid] = useState(false);
-  const categories = ["Todos", ...new Set(initialGifts.map((g) => g.category))];
+  const [gifts] = useStoredState<AdminGift[]>(
+    "sh-admin-gifts",
+    initialGifts.slice(0, 4).map((gift) => ({ ...gift, description: "Uma contribuição simbólica para criarmos novas memórias juntos.", status: "Disponível", purchased: 0 })),
+  );
+  const [siteContent] = useStoredState("sh-site-content", defaultSiteContent);
+  const publicGifts = gifts.filter((gift) => gift.status !== "Indisponível");
+  const categories = ["Todos", ...new Set(publicGifts.map((g) => g.category))];
   const shown =
-    category === "Todos" ? initialGifts : initialGifts.filter((g) => g.category === category);
+    category === "Todos" ? publicGifts : publicGifts.filter((g) => g.category === category);
   return (
     <main>
       <PageIntro
         eyebrow="Lista de presentes"
         title="Um gesto de carinho"
-        text="Sua presença é o nosso maior presente. Se desejar nos presentear, reunimos algumas ideias para a nossa nova história."
+        text={`${siteContent.giftMessage} Se desejar nos presentear, reunimos algumas ideias para a nossa nova história.`}
       />
       <section className="gifts-section">
         <div className="filters">
@@ -478,15 +571,13 @@ function Gifts() {
           {shown.map((gift) => (
             <article className="gift-card" key={gift.id}>
               <div className="gift-image">
-                <img src={gift.image} alt={gift.name} />
+                {gift.image ? <img src={gift.image} alt={gift.name} /> : <div className="gift-image-empty">Foto removida</div>}
                 <span>{gift.category}</span>
               </div>
               <div>
                 <p className="availability">{gift.available} cotas disponíveis</p>
                 <h3>{gift.name}</h3>
-                <p className="gift-desc">
-                  Uma contribuição simbólica para criarmos novas memórias juntos.
-                </p>
+                <p className="gift-desc">{gift.description || "Uma contribuição simbólica para criarmos novas memórias juntos."}</p>
                 <div className="gift-bottom">
                   <strong>
                     {gift.price.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
@@ -550,40 +641,24 @@ function Gifts() {
                     </div>
                   </div>
                 ) : (
-                  <div className="card-form">
-                    <label>
-                      Nome no cartão
-                      <input placeholder="Nome completo" />
-                    </label>
-                    <label>
-                      Número do cartão
-                      <input placeholder="0000 0000 0000 0000" />
-                    </label>
-                    <div>
-                      <label>
-                        Validade
-                        <input placeholder="MM/AA" />
-                      </label>
-                      <label>
-                        CVV
-                        <input placeholder="000" />
-                      </label>
-                    </div>
+                  <div className="payment-unavailable">
+                    <strong>Pagamento não configurado</strong>
+                    <p>Este protótipo não solicita dados de cartão nem processa transações.</p>
                   </div>
                 )}
                 <p className="demo-warning">
-                  Ambiente demonstrativo — nenhuma transação será processada.
+                  Ambiente demonstrativo — nenhuma transação será processada ou registrada como compra.
                 </p>
                 <button className="button primary full" onClick={() => setPaid(true)}>
-                  Simular pagamento
+                  Ver confirmação demonstrativa
                 </button>
               </>
             ) : (
               <div className="payment-success">
                 <Mark />
                 <p className="script">com carinho</p>
-                <h2>Presente reservado!</h2>
-                <p>Esta foi uma simulação. Nenhum valor foi cobrado ou transferido.</p>
+                <h2>Prévia demonstrativa</h2>
+                <p>Nenhuma reserva ou transação real foi efetuada. O catálogo e os pagamentos não foram alterados.</p>
                 <button className="button primary" onClick={() => setSelected(null)}>
                   Concluir
                 </button>
@@ -598,6 +673,9 @@ function Gifts() {
 
 function Info() {
   const [open, setOpen] = useState(0);
+  const [siteContent] = useStoredState("sh-site-content", defaultSiteContent);
+  const [gallery] = useStoredState("sh-site-gallery", defaultSiteGallery);
+  const image = (index: number, fallback: string) => gallery[index]?.url ?? fallback;
   return (
     <main>
       <PageIntro
@@ -607,20 +685,18 @@ function Info() {
       />
       <section className="venue">
         <div className="venue-image">
-          <img src={photos.table} alt="Celebração de casamento ao ar livre" />
+          {image(3, photos.table) && <img src={image(3, photos.table)} alt="Celebração de casamento ao ar livre" />}
         </div>
         <div className="venue-copy">
           <p className="eyebrow">Cerimônia & recepção</p>
-          <h2>Espaço Bodocó</h2>
+          <h2>{siteContent.venue}</h2>
           <p className="big-date">
             24 de julho de 2027
             <br />
             às 15 horas
           </p>
           <p>
-            Estrada Municipal do Campo Verde, 420
-            <br />
-            São Paulo — SP
+            {siteContent.address}
           </p>
           <a
             className="button primary"
@@ -637,19 +713,32 @@ function Info() {
           <p className="eyebrow light">Dress code</p>
           <h2>Passeio completo</h2>
           <p>
-            Elegante, confortável e com personalidade. A celebração acontecerá entre áreas internas
-            e jardins.
+            Elegante, confortável e com personalidade. Madrinhas em tons de verde e padrinhos em
+            terno cinza-escuro.
           </p>
-          <div className="palette">
-            <i />
-            <i />
-            <i />
-            <i />
-            <i />
+          <div className="attire-illustration" role="img" aria-label="Ilustração de um casal: homem de terno cinza-escuro e mulher de vestido longo verde">
+            <svg viewBox="0 0 360 270" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M25 242C76 219 117 228 162 242C218 260 271 224 335 240" stroke="#C9A276" strokeWidth="1.5" />
+              <path d="M42 240C57 213 57 179 48 151M48 185C34 177 26 162 24 146M49 204C65 194 74 180 78 163" stroke="#91A995" strokeWidth="2" strokeLinecap="round" />
+              <path d="M27 146C38 151 45 163 48 180C34 175 27 164 27 146ZM78 163C66 169 56 181 49 197C65 192 75 180 78 163Z" fill="#91A995" fillOpacity=".55" />
+              <path d="M145 70C145 54 156 42 171 42C187 42 198 55 198 72V91H145V70Z" fill="#D9B999" />
+              <path d="M141 94L159 83L173 94L186 83L204 96L216 184H131L141 94Z" fill="#454A49" />
+              <path d="M159 83L173 96L186 83L181 129H166L159 83Z" fill="#F8F5EC" />
+              <path d="M171 96L177 102L173 128L167 102L171 96Z" fill="#641F32" />
+              <path d="M146 99L122 114L132 150L150 140M198 100L222 114L211 150L194 140" stroke="#454A49" strokeWidth="13" strokeLinecap="round" />
+              <path d="M145 184L141 238M201 184L206 238" stroke="#343A39" strokeWidth="17" strokeLinecap="round" />
+              <path d="M132 240H152M196 240H216" stroke="#292E2D" strokeWidth="8" strokeLinecap="round" />
+              <path d="M248 70C248 53 260 41 276 41C292 41 304 54 304 71V91H248V70Z" fill="#D9B999" />
+              <path d="M246 93L276 83L307 94L319 150L300 241H235L226 150L246 93Z" fill="#365846" />
+              <path d="M246 93L276 83L267 119L241 112L246 93ZM307 94L276 83L286 119L312 112L307 94Z" fill="#F4EFE5" />
+              <path d="M276 120L292 150L300 241H235L246 150L276 120Z" fill="#456F55" />
+              <path d="M248 99L227 116L236 151M304 99L325 116L316 151" stroke="#D9B999" strokeWidth="10" strokeLinecap="round" />
+              <path d="M235 241H301" stroke="#C9A276" strokeWidth="1.5" />
+            </svg>
           </div>
           <small>
-            Pedimos gentilmente que evitem branco, off-white e verde oliva, reservados para momentos
-            especiais da cerimônia.
+            Pedimos gentilmente que evitem branco e off-white, reservados para momentos especiais da
+            cerimônia.
           </small>
         </article>
         <div className="tips">
@@ -679,14 +768,22 @@ function Info() {
         </p>
         <div className="party-cards">
           <div>
-            <span className="fabric wine" />
             <h3>Madrinhas</h3>
-            <p>Vestidos longos em vinho, bordô ou terracota queimada.</p>
+            <p>Vestidos longos em tons de verde, do verde-médio ao oliva claro.</p>
+            <div className="attire-swatches" aria-label="Tons de verde para madrinhas">
+              <span style={{ backgroundColor: "#54765B" }} />
+              <span style={{ backgroundColor: "#78946D" }} />
+              <span style={{ backgroundColor: "#A5AE79" }} />
+              <b>Verde-médio a oliva claro</b>
+            </div>
           </div>
           <div>
-            <span className="fabric green" />
             <h3>Padrinhos</h3>
-            <p>Terno em tom verde profundo, camisa marfim e gravata vinho.</p>
+            <p>Terno cinza-escuro, camisa branca e gravata.</p>
+            <div className="attire-swatches" aria-label="Cinza-escuro para padrinhos">
+              <span style={{ backgroundColor: "#454A49" }} />
+              <b>Cinza-escuro</b>
+            </div>
           </div>
         </div>
       </section>
@@ -698,291 +795,180 @@ function Admin({ go }: { go: (p: Page) => void }) {
   const [logged, setLogged] = useState(false);
   const [tab, setTab] = useState("Visão geral");
   const [search, setSearch] = useState("");
-  const [guests, setGuests] = useState([
-    { name: "Akira Nakamura", group: "Família Nakamura", status: "Confirmado" },
-    { name: "Emi Nakamura", group: "Família Nakamura", status: "Pendente" },
-    { name: "Marina Oliveira", group: "Marina & Rafael", status: "Confirmado" },
-    { name: "Rafael Oliveira", group: "Marina & Rafael", status: "Não irá" },
+  const [statusFilter, setStatusFilter] = useState("Todos");
+  const [sortBy, setSortBy] = useState("name");
+  const [guestEditor, setGuestEditor] = useState<AdminGuest | null>(null);
+  const [giftEditor, setGiftEditor] = useState<AdminGift | null>(null);
+  const [inviteEditor, setInviteEditor] = useState<AdminInvite | null>(null);
+  const [message, setMessage] = useState("");
+  const [guests, setGuests] = useStoredState<AdminGuest[]>("sh-admin-guests", initialAdminGuests);
+  const [invites, setInvites] = useStoredState<AdminInvite[]>("sh-admin-invites", [
+    { id: "invite-sh2027", code: "SH2027", group: "Família Nakamura" },
+    { id: "invite-amsterdam", code: "AMSTERDAM", group: "Marina & Rafael" },
   ]);
-  const [newGuest, setNewGuest] = useState("");
-  const [adminGifts, setAdminGifts] = useState(initialGifts.slice(0, 4));
-  if (!logged)
+  const [adminGifts, setAdminGifts] = useStoredState<AdminGift[]>(
+    "sh-admin-gifts",
+    initialGifts.slice(0, 4).map((gift) => ({
+      ...gift,
+      description: "Uma contribuição simbólica para criarmos novas memórias juntos.",
+      status: "Disponível",
+      purchased: 0,
+    })),
+  );
+  const [payments] = useStoredState(
+    "sh-demo-payments",
+    [
+      { id: "demo-1", gift: "Jantar sob as estrelas", buyer: "Registro demonstrativo", value: 420, method: "PIX", date: "2026-10-28", status: "Simulação — sem cobrança" },
+      { id: "demo-2", gift: "Passeio pelos canais", buyer: "Registro demonstrativo", value: 680, method: "Cartão", date: "2026-11-02", status: "Simulação — sem cobrança" },
+    ],
+  );
+  const [paymentFilter, setPaymentFilter] = useState("Todos");
+  const [content, setContent] = useStoredState("sh-site-content", defaultSiteContent);
+  const [gallery, setGallery] = useStoredState("sh-site-gallery", defaultSiteGallery);
+  const tabs = ["Visão geral", "Convidados", "Convites", "Presentes", "Pagamentos", "Conteúdo", "Fotos"];
+  const activeGuests = guests.filter((guest) => guest.status !== "Cancelado");
+  const totals = {
+    guests: guests.length,
+    confirmed: guests.filter((guest) => guest.status === "Confirmado").length,
+    declined: guests.filter((guest) => guest.status === "Não irá").length,
+    pending: guests.filter((guest) => guest.status === "Pendente").length,
+    canceled: guests.filter((guest) => guest.status === "Cancelado").length,
+    invites: invites.length,
+    answeredInvites: invites.filter((invite) =>
+      guests.some((guest) => guest.code === invite.code && ["Confirmado", "Não irá"].includes(guest.status)),
+    ).length,
+  };
+  const pendingInvites = Math.max(0, totals.invites - totals.answeredInvites);
+  const responded = totals.confirmed + totals.declined;
+  const pct = (value: number) => (guests.length ? Math.round((value / guests.length) * 100) : 0);
+  const sortedGuests = [...guests]
+    .filter((guest) => statusFilter === "Todos" || guest.status === statusFilter)
+    .filter((guest) => `${guest.name} ${guest.group} ${guest.code} ${guest.id}`.toLowerCase().includes(search.toLowerCase()))
+    .sort((a, b) => sortBy === "name" ? a.name.localeCompare(b.name) : a.id.localeCompare(b.id));
+  const nextGuestId = () => String(Math.max(0, ...guests.map((guest) => Number(guest.id))) + 1).padStart(3, "0");
+  const saveGuest = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!guestEditor) return;
+    if (guests.some((guest) => guest.id === guestEditor.id)) {
+      setGuests(guests.map((guest) => guest.id === guestEditor.id ? guestEditor : guest));
+    } else {
+      setGuests([...guests, guestEditor]);
+    }
+    setGuestEditor(null);
+  };
+  const addGuest = () => setGuestEditor({
+    id: nextGuestId(),
+    name: "",
+    code: invites[0]?.code || "",
+    group: invites[0]?.group || "",
+    status: "Pendente",
+    responseDate: "",
+    notes: "",
+  });
+  const saveInvite = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!inviteEditor) return;
+    const previousCode = invites.find((invite) => invite.id === inviteEditor.id)?.code;
+    if (invites.some((invite) => invite.code === inviteEditor.code && invite.id !== inviteEditor.id)) {
+      setMessage("Este código já está associado a outro convite. Escolha um código único.");
+      return;
+    }
+    const updatedInvites = invites.some((invite) => invite.id === inviteEditor.id)
+      ? invites.map((invite) => invite.id === inviteEditor.id ? inviteEditor : invite)
+      : [...invites, inviteEditor];
+    setInvites(updatedInvites);
+    setGuests(guests.map((guest) => guest.code === previousCode || guest.code === inviteEditor.code ? { ...guest, code: inviteEditor.code, group: inviteEditor.group } : guest));
+    setInviteEditor(null);
+  };
+  const saveGift = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!giftEditor) return;
+    const updated = adminGifts.some((gift) => gift.id === giftEditor.id)
+      ? adminGifts.map((gift) => gift.id === giftEditor.id ? giftEditor : gift)
+      : [...adminGifts, giftEditor];
+    setAdminGifts(updated);
+    setGiftEditor(null);
+  };
+  if (!logged) {
     return (
       <main className="admin-login">
         <div className="login-art">
           <Botanical />
           <Mark light />
           <p>Sarah & Hayato</p>
-          <span>Área reservada</span>
+          <span>Área administrativa</span>
         </div>
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            setLogged(true);
-          }}
-        >
-          <button type="button" className="back-site" onClick={() => go("home")}>
-            ← Voltar ao site
-          </button>
+        <form onSubmit={(event) => { event.preventDefault(); setLogged(true); }}>
+          <button type="button" className="back-site" onClick={() => go("home")}>← Voltar ao site</button>
           <p className="eyebrow">Administração</p>
           <h1>Bem-vindos</h1>
-          <p>Acesse o painel para acompanhar e editar as informações do casamento.</p>
-          <label>
-            E-mail
-            <input required type="email" defaultValue="sarah@sh2027.com" />
-          </label>
-          <label>
-            Senha
-            <input required type="password" defaultValue="casamento2027" />
-          </label>
+          <p>Acesse o painel demonstrativo de organização do casamento.</p>
+          <label>E-mail<input required type="email" placeholder="E-mail dos noivos" /></label>
+          <label>Senha<input required type="password" placeholder="Senha" /></label>
           <button className="button primary full">Entrar no painel</button>
-          <small>Ambiente demonstrativo. Use os dados já preenchidos.</small>
+          <small>Protótipo local: autenticação e armazenamento no navegador não substituem um backend seguro.</small>
         </form>
       </main>
     );
-  const tabs = ["Visão geral", "Convidados", "Convites", "Presentes", "Conteúdo", "Fotos"];
-  const filtered = guests.filter((g) =>
-    `${g.name} ${g.group}`.toLowerCase().includes(search.toLowerCase()),
-  );
+  }
   return (
     <main className="dashboard">
       <aside>
         <Mark light />
-        <nav>
-          {tabs.map((t) => (
-            <button className={tab === t ? "active" : ""} onClick={() => setTab(t)} key={t}>
-              {t}
-              <span>›</span>
-            </button>
-          ))}
-        </nav>
-        <button className="logout" onClick={() => setLogged(false)}>
-          Sair do painel
-        </button>
+        <nav>{tabs.map((item) => <button className={tab === item ? "active" : ""} onClick={() => setTab(item)} key={item}>{item}<span>›</span></button>)}</nav>
+        <button className="logout" onClick={() => setLogged(false)}>Sair do painel</button>
       </aside>
       <section className="dash-main">
-        <header>
-          <div>
-            <p className="eyebrow">24 · 07 · 2027</p>
-            <h1>{tab}</h1>
+        <header><div><p className="eyebrow">24 · 07 · 2027</p><h1>{tab}</h1></div><button className="button ghost" onClick={() => go("home")}>Pré-visualizar site ↗</button></header>
+        {message && <p className="admin-notice" role="status">{message}<button onClick={() => setMessage("")}>Fechar</button></p>}
+        {tab === "Visão geral" && <>
+          <div className="metric-grid">
+            {[["Convidados cadastrados", totals.guests], ["Confirmados", totals.confirmed], ["Não comparecerão", totals.declined], ["Aguardando resposta", totals.pending], ["Cancelados", totals.canceled], ["Convites cadastrados", totals.invites], ["Convites respondidos", totals.answeredInvites], ["Convites pendentes", pendingInvites]].map(([label, value]) => <article key={label}><span>{label}</span><strong>{value}</strong><small>{label === "Convites cadastrados" ? "grupos de convite" : "atualizado pelos cadastros"}</small></article>)}
           </div>
-          <button className="button ghost" onClick={() => go("home")}>
-            Pré-visualizar site ↗
-          </button>
-        </header>
-        {tab === "Visão geral" && (
-          <>
-            <div className="metric-grid">
-              <article>
-                <span>Convidados</span>
-                <strong>124</strong>
-                <small>em 52 convites</small>
-              </article>
-              <article>
-                <span>Confirmados</span>
-                <strong>86</strong>
-                <small className="positive">69% do total</small>
-              </article>
-              <article>
-                <span>Pendentes</span>
-                <strong>31</strong>
-                <small>Enviar lembrete</small>
-              </article>
-              <article>
-                <span>Presentes</span>
-                <strong>18</strong>
-                <small className="positive">12 esta semana</small>
-              </article>
-            </div>
-            <div className="dashboard-grid">
-              <article className="chart-card">
-                <h3>Confirmações</h3>
-                <div className="donut">
-                  <span>
-                    69%<small>confirmados</small>
-                  </span>
-                </div>
-                <div className="legend">
-                  <span>
-                    <i className="confirmed" /> Confirmados 86
-                  </span>
-                  <span>
-                    <i className="pending" /> Pendentes 31
-                  </span>
-                  <span>
-                    <i className="declined" /> Ausentes 7
-                  </span>
-                </div>
-              </article>
-              <article className="activity">
-                <h3>Atividade recente</h3>
-                {[
-                  "Marina confirmou presença",
-                  "Novo presente reservado",
-                  "Rafael informou ausência",
-                  "Foto da galeria atualizada",
-                ].map((x, i) => (
-                  <p key={x}>
-                    <i />
-                    {x}
-                    <small>
-                      há {i + 1} hora{i ? "s" : ""}
-                    </small>
-                  </p>
-                ))}
-              </article>
-            </div>
-          </>
-        )}
-        {tab === "Convidados" && (
-          <article className="admin-table">
-            <div className="table-tools">
-              <input
-                placeholder="Buscar convidado ou grupo"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-              />
-              <form
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  if (newGuest.trim()) {
-                    setGuests([
-                      ...guests,
-                      { name: newGuest, group: "Novo convite", status: "Pendente" },
-                    ]);
-                    setNewGuest("");
-                  }
-                }}
-              >
-                <input
-                  placeholder="Nome do novo convidado"
-                  value={newGuest}
-                  onChange={(e) => setNewGuest(e.target.value)}
-                />
-                <button className="button primary">Adicionar</button>
-              </form>
-            </div>
-            <table>
-              <thead>
-                <tr>
-                  <th>Convidado</th>
-                  <th>Convite</th>
-                  <th>Status</th>
-                  <th />
-                </tr>
-              </thead>
-              <tbody>
-                {filtered.map((g) => (
-                  <tr key={g.name}>
-                    <td>
-                      <b>{g.name}</b>
-                    </td>
-                    <td>{g.group}</td>
-                    <td>
-                      <button
-                        className={`status ${g.status.toLowerCase().replace(" ", "-")}`}
-                        onClick={() =>
-                          setGuests(
-                            guests.map((x) =>
-                              x.name === g.name
-                                ? {
-                                    ...x,
-                                    status: x.status === "Confirmado" ? "Pendente" : "Confirmado",
-                                  }
-                                : x,
-                            ),
-                          )
-                        }
-                      >
-                        {g.status}
-                      </button>
-                    </td>
-                    <td>
-                      <button
-                        className="delete"
-                        onClick={() => setGuests(guests.filter((x) => x.name !== g.name))}
-                      >
-                        Excluir
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </article>
-        )}
-        {tab === "Presentes" && (
-          <div className="admin-gifts">
-            <div className="section-heading">
-              <div>
-                <h2>Catálogo de presentes</h2>
-                <p>Organize itens, valores e disponibilidade.</p>
-              </div>
-              <button
-                className="button primary"
-                onClick={() =>
-                  setAdminGifts([...adminGifts, { ...initialGifts[5], id: Date.now() }])
-                }
-              >
-                Adicionar presente
-              </button>
-            </div>
-            {adminGifts.map((g, i) => (
-              <article key={g.id}>
-                <img src={g.image} alt="" />
-                <div>
-                  <b>{g.name}</b>
-                  <small>{g.category}</small>
-                </div>
-                <strong>R$ {g.price}</strong>
-                <span>{g.available} cotas</span>
-                <button onClick={() => setAdminGifts(adminGifts.filter((_, x) => x !== i))}>
-                  Excluir
-                </button>
-              </article>
-            ))}
+          <div className="dashboard-grid">
+            <article className="chart-card">
+              <h3>Status dos convidados</h3>
+              <div className="admin-bars">{[["Confirmados", totals.confirmed, "confirmed"], ["Não irão", totals.declined, "declined"], ["Pendentes", totals.pending, "pending"], ["Cancelados", totals.canceled, "canceled"]].map(([label, value, css]) => <div className="admin-bar-row" key={label}><span>{label}</span><div><i className={String(css)} style={{ width: `${pct(Number(value))}%` }} /></div><b>{value}</b></div>)}</div>
+              <p className="admin-chart-note">{responded} de {activeGuests.length} convidados ativos responderam.</p>
+            </article>
+            <article className="activity"><h3>Visão dos convites</h3><div className="invite-summary"><strong>{totals.answeredInvites}</strong><span>respondidos</span><strong>{pendingInvites}</strong><span>pendentes</span></div><p>O convite é contado como respondido quando ao menos uma pessoa do grupo informou sua resposta.</p><button className="button ghost" onClick={() => setTab("Convites")}>Gerenciar convites</button></article>
           </div>
-        )}
-        {tab === "Conteúdo" && (
-          <div className="content-editor">
-            <h2>Textos do site</h2>
-            <p>Edite os principais textos publicados.</p>
-            {[
-              ["Título da história", "Do acaso, floresceu o amor."],
-              [
-                "Nossa história",
-                "Nos encontramos em uma tarde que parecia comum. Entre conversas longas, cafés sem pressa e viagens improvisadas...",
-              ],
-              ["Mensagem de presentes", "Sua presença é o nosso maior presente."],
-            ].map(([label, text]) => (
-              <label key={label}>
-                {label}
-                <textarea defaultValue={text} />
-              </label>
-            ))}
-            <button
-              className="button primary"
-              onClick={() => alert("Alterações salvas nesta demonstração.")}
-            >
-              Salvar alterações
-            </button>
-          </div>
-        )}
-        {["Convites", "Fotos"].includes(tab) && (
-          <div className="empty-admin">
-            <Botanical />
-            <h2>{tab}</h2>
-            <p>
-              {tab === "Fotos"
-                ? "Envie, organize e defina as imagens em destaque do site."
-                : "Crie grupos, gere códigos exclusivos e acompanhe cada resposta."}
-            </p>
-            <button className="button primary">
-              Adicionar {tab === "Fotos" ? "foto" : "convite"}
-            </button>
-          </div>
-        )}
+        </>}
+        {tab === "Convidados" && <article className="admin-table">
+          <div className="section-heading"><div><h2>Lista de convidados</h2><p>{guests.length} registros, incluindo cancelados.</p>{invites.length === 0 && <p>Crie um convite antes de adicionar convidados.</p>}</div><button className="button primary" onClick={addGuest} disabled={invites.length === 0}>Adicionar convidado</button></div>
+          <div className="guest-filters">{["Todos", "Confirmado", "Não irá", "Pendente", "Cancelado"].map((status) => <button className={statusFilter === status ? "active" : ""} onClick={() => setStatusFilter(status)} key={status}>{status}</button>)}</div>
+          <div className="table-tools"><input placeholder="Pesquisar nome, número, grupo ou código" value={search} onChange={(event) => setSearch(event.target.value)} /><label className="sort-control">Ordenar<select value={sortBy} onChange={(event) => setSortBy(event.target.value)}><option value="name">Nome</option><option value="id">Número</option></select></label></div>
+          <div className="table-scroll"><table><thead><tr><th>Nº</th><th>Nome completo</th><th>Código</th><th>Grupo / titular</th><th>Status</th><th>Data da resposta</th><th>Ações</th></tr></thead><tbody>{sortedGuests.map((guest) => <tr key={guest.id}><td>{guest.id}</td><td><b>{guest.name}</b>{guest.notes && <small className="internal-note">Nota interna: {guest.notes}</small>}</td><td>{guest.code}</td><td>{guest.group}</td><td><select className={`status-select status-${guest.status.replace(/\s+/g, "-")}`} value={guest.status} onChange={(event) => setGuests(guests.map((item) => item.id === guest.id ? { ...item, status: event.target.value as AdminGuestStatus, responseDate: ["Pendente", "Cancelado"].includes(event.target.value) ? "" : new Date().toISOString().slice(0, 10) } : item))}><option>Confirmado</option><option>Não irá</option><option>Pendente</option><option>Cancelado</option></select></td><td>{guest.responseDate || "—"}</td><td className="table-actions"><button onClick={() => setGuestEditor(guest)}>Editar</button><button className="delete" onClick={() => { if (window.confirm(`Excluir ${guest.name}? O registro será preservado como cancelado para manter o histórico.`)) setGuests(guests.map((item) => item.id === guest.id ? { ...item, status: "Cancelado", responseDate: "" } : item)); }}>Excluir</button></td></tr>)}</tbody></table>{sortedGuests.length === 0 && <p className="empty-message">Nenhum convidado encontrado.</p>}</div>
+        </article>}
+        {tab === "Convites" && <article className="admin-table">
+          <div className="section-heading"><div><h2>Convites e grupos</h2><p>Gerencie códigos e acompanhe respostas individuais do grupo.</p></div><button className="button primary" onClick={() => setInviteEditor({ id: `invite-${Date.now()}`, code: `SH${String(Date.now()).slice(-4)}`, group: "" })}>Criar convite</button></div>
+          <div className="invite-admin-grid">{invites.map((invite) => { const members = guests.filter((guest) => guest.code === invite.code); const answered = members.filter((guest) => guest.status === "Confirmado" || guest.status === "Não irá").length; return <article key={invite.id}><div className="invite-admin-heading"><div><span>CÓDIGO DO CONVITE</span><strong>{invite.code}</strong></div><button onClick={() => setInviteEditor(invite)}>Editar grupo</button></div><h3>{invite.group}</h3><p>{members.length} integrantes · {answered} respostas · {members.length - answered} pendentes</p><div className="invite-members">{members.map((guest) => <div key={guest.id}><span>{guest.name}</span><b className={`status-text status-${guest.status.replace(/\s+/g, "-")}`}>{guest.status}</b><button onClick={() => setGuestEditor(guest)}>Editar</button></div>)}</div><div className="invite-card-actions"><button className="button ghost" onClick={() => { const names = window.prompt("Nomes completos, separados por vírgula"); if (names?.trim()) { let nextId = Math.max(0, ...guests.map((guest) => Number(guest.id))) + 1; const additions = names.split(",").map((name) => name.trim()).filter(Boolean).map((name) => ({ id: String(nextId++).padStart(3, "0"), name, code: invite.code, group: invite.group, status: "Pendente" as AdminGuestStatus, responseDate: "", notes: "" })); setGuests([...guests, ...additions]); } }}>Adicionar em grupo</button><button className="button primary" onClick={addGuest}>Novo integrante</button><button className="delete" onClick={() => { if (window.confirm(`Excluir o convite ${invite.code}? Os integrantes associados serão marcados como cancelados.`)) { setInvites(invites.filter((item) => item.id !== invite.id)); setGuests(guests.map((guest) => guest.code === invite.code ? { ...guest, status: "Cancelado" } : guest)); } }}>Excluir convite</button></div></article>; })}</div>
+        </article>}
+        {tab === "Presentes" && <article className="admin-gifts">
+          <div className="section-heading"><div><h2>Lista de presentes</h2><p>{adminGifts.length} itens · as alterações são exibidas no catálogo público.</p></div><button className="button primary" onClick={() => setGiftEditor({ id: Date.now(), name: "", category: "Novo lar", price: 0, image: "", available: 1, description: "", status: "Disponível", purchased: 0 })}>Adicionar presente</button></div>
+          <div className="gift-inventory-summary"><span><b>{adminGifts.filter((gift) => gift.status !== "Indisponível").length}</b> disponíveis</span><span><b>{adminGifts.reduce((sum, gift) => sum + (gift.purchased || 0), 0)}</b> compras registradas</span></div>
+          {adminGifts.map((gift) => <article key={gift.id}>{gift.image ? <img src={gift.image} alt="" /> : <div className="admin-gift-image-empty">Sem foto</div>}<div><b>{gift.name}</b><small>{gift.category} · {gift.description || "Sem descrição"}</small></div><strong>{gift.price.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}</strong><span>{gift.available} cotas · {gift.status}</span><div className="gift-admin-actions"><button onClick={() => setGiftEditor(gift)}>Editar</button><button onClick={() => setAdminGifts([...adminGifts, { ...gift, id: Date.now(), name: `${gift.name} (cópia)` }])}>Duplicar</button><button className="delete" onClick={() => { if (window.confirm(`Excluir o presente "${gift.name}"?`)) setAdminGifts(adminGifts.filter((item) => item.id !== gift.id)); }}>Excluir</button></div></article>)}
+        </article>}
+        {tab === "Pagamentos" && <article className="admin-table">
+          <div className="section-heading"><div><h2>Registros de pagamento</h2><p>Registros apenas ilustrativos; não representam transações ou cobranças reais.</p></div></div>
+          <div className="payment-summary"><span>Registros demonstrativos <b>{payments.length}</b></span><span>Transações efetivadas <b>0</b></span><span>Total recebido <b>R$ 0,00</b></span></div>
+          <label className="sort-control">Filtrar<select value={paymentFilter} onChange={(event) => setPaymentFilter(event.target.value)}><option>Todos</option><option>PIX</option><option>Cartão</option></select></label>
+          <div className="table-scroll"><table><thead><tr><th>Presente</th><th>Comprador</th><th>Valor</th><th>Método</th><th>Data</th><th>Status</th></tr></thead><tbody>{payments.filter((payment) => paymentFilter === "Todos" || payment.method === paymentFilter).map((payment) => <tr key={payment.id}><td>{payment.gift}</td><td>{payment.buyer}</td><td>{payment.value.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}</td><td>{payment.method}</td><td>{payment.date}</td><td>{payment.status}</td></tr>)}</tbody></table></div>
+        </article>}
+        {tab === "Conteúdo" && <article className="content-editor">
+          <h2>Conteúdos do site</h2><p>Edite textos que são exibidos nas páginas públicas.</p>
+          {([["Título da história", "storyTitle"], ["Nossa história", "story"], ["Mensagem da lista de presentes", "giftMessage"], ["Local da cerimônia", "venue"], ["Endereço", "address"]] as const).map(([label, key]) => <label key={key}>{label}<textarea value={content[key]} onChange={(event) => setContent({ ...content, [key]: event.target.value })} /></label>)}
+          <button className="button primary" onClick={() => setMessage("Conteúdo salvo e publicado no site deste navegador.")}>Salvar alterações</button>
+        </article>}
+        {tab === "Fotos" && <article className="content-editor">
+          <h2>Fotos do site</h2><p>Informe uma URL pública de imagem. O campo vazio remove a foto daquela seção.</p>
+          {gallery.map((image, index) => <div className="photo-editor-row" key={image.id}><label>{image.label}<input value={image.url} onChange={(event) => setGallery(gallery.map((item, itemIndex) => itemIndex === index ? { ...item, url: event.target.value } : item))} placeholder="https://..." /></label>{image.url && <img src={image.url} alt={`Prévia: ${image.label}`} />}<div><button onClick={() => { if (index > 0) { const next = [...gallery]; [next[index - 1], next[index]] = [next[index], next[index - 1]]; setGallery(next); } }}>Mover para cima</button><button onClick={() => { if (index < gallery.length - 1) { const next = [...gallery]; [next[index + 1], next[index]] = [next[index], next[index + 1]]; setGallery(next); } }}>Mover para baixo</button><button className="delete" onClick={() => setGallery(gallery.map((item, itemIndex) => itemIndex === index ? { ...item, url: "" } : item))}>Remover foto</button></div></div>)}
+          <button className="button primary" onClick={() => setGallery([...gallery, { id: `photo-${Date.now()}`, label: "Nova foto", url: "" }])}>Adicionar foto</button><p className="admin-chart-note">Para substituir uma foto, cole a URL da nova imagem e salve. Alterações são salvas neste navegador.</p>
+        </article>}
       </section>
+      {guestEditor && <div className="modal-backdrop" onMouseDown={() => setGuestEditor(null)}><form className="admin-editor-modal" onSubmit={saveGuest} onMouseDown={(event) => event.stopPropagation()}><button type="button" className="modal-close" onClick={() => setGuestEditor(null)}>Fechar ×</button><h2>{guests.some((guest) => guest.id === guestEditor.id) ? "Editar convidado" : "Novo convidado"}</h2><label>Nome completo<input required value={guestEditor.name} onChange={(event) => setGuestEditor({ ...guestEditor, name: event.target.value })} /></label><label>Convite<select value={guestEditor.code} onChange={(event) => { const invite = invites.find((item) => item.code === event.target.value); setGuestEditor({ ...guestEditor, code: event.target.value, group: invite?.group || "" }); }}>{invites.map((invite) => <option key={invite.id} value={invite.code}>{invite.code} — {invite.group}</option>)}</select></label><label>Grupo familiar / titular<input required value={guestEditor.group} onChange={(event) => setGuestEditor({ ...guestEditor, group: event.target.value })} /></label><label>Status<select value={guestEditor.status} onChange={(event) => setGuestEditor({ ...guestEditor, status: event.target.value as AdminGuestStatus, responseDate: ["Pendente", "Cancelado"].includes(event.target.value) ? "" : new Date().toISOString().slice(0, 10) })}><option>Confirmado</option><option>Não irá</option><option>Pendente</option><option>Cancelado</option></select></label><label>Observação interna<textarea value={guestEditor.notes} onChange={(event) => setGuestEditor({ ...guestEditor, notes: event.target.value })} /></label><div className="form-actions"><button type="button" className="button ghost" onClick={() => setGuestEditor(null)}>Cancelar</button><button className="button primary">Salvar convidado</button></div></form></div>}
+      {inviteEditor && <div className="modal-backdrop" onMouseDown={() => setInviteEditor(null)}><form className="admin-editor-modal" onSubmit={saveInvite} onMouseDown={(event) => event.stopPropagation()}><button type="button" className="modal-close" onClick={() => setInviteEditor(null)}>Fechar ×</button><h2>{invites.some((invite) => invite.id === inviteEditor.id) ? "Editar convite" : "Novo convite"}</h2><label>Código único<input required value={inviteEditor.code} onChange={(event) => setInviteEditor({ ...inviteEditor, code: event.target.value.toUpperCase().replace(/\s/g, "") })} /></label><label>Grupo familiar ou titular<input required value={inviteEditor.group} onChange={(event) => setInviteEditor({ ...inviteEditor, group: event.target.value })} /></label><div className="form-actions"><button type="button" className="button ghost" onClick={() => setInviteEditor(null)}>Cancelar</button><button className="button primary">Salvar convite</button></div></form></div>}
+      {giftEditor && <div className="modal-backdrop" onMouseDown={() => setGiftEditor(null)}><form className="admin-editor-modal" onSubmit={saveGift} onMouseDown={(event) => event.stopPropagation()}><button type="button" className="modal-close" onClick={() => setGiftEditor(null)}>Fechar ×</button><h2>{adminGifts.some((gift) => gift.id === giftEditor.id) ? "Editar presente" : "Novo presente"}</h2><label>Nome<input required value={giftEditor.name} onChange={(event) => setGiftEditor({ ...giftEditor, name: event.target.value })} /></label><label>Descrição<textarea value={giftEditor.description || ""} onChange={(event) => setGiftEditor({ ...giftEditor, description: event.target.value })} /></label><label>Preço (R$)<input required type="number" min="0" step="0.01" value={giftEditor.price} onChange={(event) => setGiftEditor({ ...giftEditor, price: Number(event.target.value) })} /></label><label>Categoria<input required value={giftEditor.category} onChange={(event) => setGiftEditor({ ...giftEditor, category: event.target.value })} /></label><label>URL da imagem<input value={giftEditor.image} onChange={(event) => setGiftEditor({ ...giftEditor, image: event.target.value })} placeholder="https://..." /></label><label>Cotas disponíveis<input required type="number" min="0" value={giftEditor.available} onChange={(event) => setGiftEditor({ ...giftEditor, available: Number(event.target.value) })} /></label><label>Status<select value={giftEditor.status || "Disponível"} onChange={(event) => setGiftEditor({ ...giftEditor, status: event.target.value as AdminGift["status"] })}><option>Disponível</option><option>Indisponível</option></select></label><div className="form-actions"><button type="button" className="button ghost" onClick={() => setGiftEditor(null)}>Cancelar</button><button className="button primary">Salvar presente</button></div></form></div>}
     </main>
   );
 }

@@ -1766,3 +1766,507 @@ td {
     display: none;
   }
 }
+
+.dress-card {
+  position: relative;
+}
+.attire-illustration {
+  width: min(100%, 360px);
+  margin: 30px auto 24px;
+}
+.managed-gallery {
+  padding: 90px 6vw;
+  text-align: center;
+  background: var(--paper);
+}
+.managed-gallery h2 {
+  font: 500 clamp(36px, 5vw, 58px) "Cormorant Garamond";
+  color: var(--green);
+  margin: 0 0 30px;
+}
+.managed-gallery-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 20px;
+  max-width: 1200px;
+  margin: auto;
+}
+.managed-gallery-grid figure {
+  margin: 0;
+  border: 1px solid var(--line);
+  padding: 10px;
+  background: var(--ivory);
+}
+.managed-gallery-grid img {
+  height: 260px;
+  object-fit: cover;
+  filter: saturate(0.75);
+}
+.managed-gallery-grid figcaption {
+  padding: 10px 4px 2px;
+  color: var(--green);
+  font: italic 17px "Cormorant Garamond";
+}
+.attire-illustration svg {
+  display: block;
+  width: 100%;
+  filter: drop-shadow(0 8px 12px rgba(0, 0, 0, 0.1));
+}
+.attire-swatches {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 20px;
+  flex-wrap: wrap;
+}
+.attire-swatches span {
+  display: inline-block;
+  width: 60px;
+  height: 24px;
+  border: 1px solid rgba(31, 57, 43, 0.2);
+}
+.attire-swatches b {
+  flex-basis: 100%;
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+}
+.dashboard aside nav button {
+  font-size: 14px;
+}
+.logout {
+  font-size: 13px;
+}
+.metric-grid span {
+  font-size: 12px;
+  line-height: 1.4;
+}
+.metric-grid strong {
+  font-size: 48px;
+}
+.metric-grid small,
+.admin-chart-note {
+  font-size: 12px;
+}
+.dashboard-grid h3 {
+  font-size: 26px;
+}
+.legend {
+  font-size: 12px;
+}
+.activity p {
+  font-size: 14px;
+}
+.activity small {
+  font-size: 12px;
+}
+.table-tools > input,
+.table-tools form input,
+.sort-control,
+.guest-filters button,
+.table-scroll th,
+.table-scroll td,
+.table-scroll select,
+.table-actions button,
+.invite-admin-grid p,
+.invite-members,
+.invite-admin-heading button,
+.gift-admin-actions button,
+.admin-gifts article > span,
+.admin-gifts article > strong,
+.gift-inventory-summary,
+.payment-summary,
+.photo-editor-row button {
+  font-size: 13px;
+}
+.table-scroll {
+  width: 100%;
+  overflow-x: auto;
+}
+.table-scroll table {
+  min-width: 950px;
+}
+.table-scroll th {
+  font-size: 12px;
+  white-space: nowrap;
+}
+.table-scroll td {
+  font-size: 13px;
+  line-height: 1.45;
+}
+.table-scroll select,
+.sort-control select,
+.admin-editor-modal select {
+  min-height: 42px;
+  border: 1px solid var(--line);
+  background: #fffdf8;
+  padding: 8px 10px;
+  color: var(--ink);
+}
+.table-actions {
+  white-space: nowrap;
+}
+.table-actions button,
+.invite-members button,
+.invite-admin-heading button,
+.gift-admin-actions button {
+  margin-right: 10px;
+  border: 0;
+  background: transparent;
+  color: var(--green);
+  text-decoration: underline;
+}
+.payment-unavailable {
+  padding: 20px;
+  background: #eee9dc;
+  border: 1px solid var(--line);
+}
+.payment-unavailable strong {
+  color: var(--green);
+  font-size: 15px;
+}
+.payment-unavailable p,
+.demo-warning {
+  font-size: 13px;
+}
+.admin-table .button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.status-select {
+  min-width: 132px;
+  border-radius: 20px;
+}
+.status-Confirmado {
+  color: var(--green);
+  background: #dce7dd !important;
+}
+.status-Não-irá {
+  color: var(--wine);
+  background: #eedee0 !important;
+}
+.status-Pendente {
+  color: #66572c;
+  background: #efe7d4 !important;
+}
+.status-Cancelado {
+  color: #5d5d5d;
+  background: #e2e0d8 !important;
+}
+.status-text {
+  font-size: 12px;
+}
+.internal-note {
+  display: block;
+  max-width: 180px;
+  margin-top: 5px;
+  color: #776b55;
+  font-size: 12px;
+}
+.empty-message,
+.empty-admin p {
+  font-size: 14px;
+}
+.guest-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+.guest-filters button {
+  border: 1px solid var(--line);
+  padding: 9px 13px;
+  background: transparent;
+  color: var(--green);
+}
+.guest-filters button.active {
+  background: var(--green);
+  color: white;
+}
+.sort-control {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  color: var(--ink);
+}
+.sort-control select {
+  margin-top: 0;
+  min-width: 130px;
+}
+.admin-notice {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #e0eadf;
+  padding: 14px 18px;
+  margin-bottom: 20px;
+  color: var(--green);
+  font-size: 14px;
+}
+.admin-notice button {
+  background: transparent;
+  border: 0;
+  text-decoration: underline;
+}
+.admin-bars {
+  display: grid;
+  gap: 19px;
+  margin: 30px 0 18px;
+}
+.admin-bar-row {
+  display: grid;
+  grid-template-columns: 130px 1fr 40px;
+  gap: 12px;
+  align-items: center;
+  font-size: 13px;
+}
+.admin-bar-row > div {
+  height: 14px;
+  background: #e9e5db;
+}
+.admin-bar-row i {
+  display: block;
+  height: 100%;
+  min-width: 0;
+  background: var(--green);
+}
+.admin-bar-row i.declined {
+  background: var(--wine);
+}
+.admin-bar-row i.pending {
+  background: #c4b789;
+}
+.admin-bar-row i.canceled {
+  background: #99958a;
+}
+.admin-chart-note {
+  color: #70766f;
+}
+.invite-summary {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: baseline;
+  column-gap: 14px;
+  margin: 25px 0;
+}
+.invite-summary strong {
+  font: 500 38px "Cormorant Garamond";
+  color: var(--green);
+}
+.invite-summary span {
+  font-size: 14px;
+}
+.invite-admin-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+}
+.invite-admin-grid > article {
+  background: #fffdf8;
+  border: 1px solid var(--line);
+  padding: 20px;
+}
+.invite-admin-heading {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  align-items: center;
+}
+.invite-admin-heading span {
+  display: block;
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  color: #777;
+}
+.invite-admin-heading strong {
+  font: 500 24px "Cormorant Garamond";
+  color: var(--green);
+}
+.invite-admin-grid h3 {
+  margin: 16px 0 6px;
+  color: var(--green);
+  font: 500 25px "Cormorant Garamond";
+}
+.invite-members {
+  border-top: 1px solid var(--line);
+  margin-top: 14px;
+}
+.invite-members > div {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  border-bottom: 1px solid var(--line);
+  padding: 10px 0;
+}
+.invite-card-actions,
+.gift-admin-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 16px;
+}
+.gift-image-empty,
+.admin-gift-image-empty {
+  display: grid;
+  place-items: center;
+  height: 100%;
+  background: #e9e1d4;
+  color: #77766d;
+  font: italic 15px "Cormorant Garamond";
+}
+.admin-gift-image-empty {
+  width: 64px;
+  height: 64px;
+}
+.gift-inventory-summary,
+.payment-summary {
+  display: flex;
+  gap: 25px;
+  flex-wrap: wrap;
+  padding: 15px 0;
+  border-bottom: 1px solid var(--line);
+}
+.gift-inventory-summary b,
+.payment-summary b {
+  color: var(--green);
+  margin-left: 5px;
+}
+.admin-gifts article {
+  grid-template-columns: 64px minmax(180px, 1fr) 120px 160px auto;
+  gap: 12px;
+}
+.admin-gifts article img {
+  width: 64px;
+  height: 64px;
+}
+.admin-gifts article small {
+  font-size: 12px;
+}
+.admin-editor-modal {
+  width: min(620px, 100%);
+  max-height: 92vh;
+  overflow-y: auto;
+  position: relative;
+  background: var(--paper);
+  padding: clamp(28px, 5vw, 48px);
+}
+.admin-editor-modal h2 {
+  font: 500 36px "Cormorant Garamond";
+  color: var(--green);
+  margin: 0 0 20px;
+}
+.admin-editor-modal label,
+.photo-editor-row label {
+  display: block;
+  margin: 18px 0;
+  font-size: 13px;
+  font-weight: 600;
+}
+.admin-editor-modal input,
+.admin-editor-modal textarea,
+.admin-editor-modal select,
+.photo-editor-row input {
+  width: 100%;
+  margin-top: 8px;
+  font-size: 15px;
+  letter-spacing: 0;
+  text-transform: none;
+}
+.admin-editor-modal textarea {
+  min-height: 85px;
+}
+.admin-editor-modal .form-actions {
+  gap: 10px;
+}
+.content-editor label {
+  font-size: 13px;
+}
+.content-editor textarea {
+  font-size: 15px;
+}
+.photo-editor-row {
+  border-top: 1px solid var(--line);
+  padding: 10px 0 20px;
+}
+.photo-editor-row img {
+  width: min(100%, 260px);
+  max-height: 150px;
+  object-fit: cover;
+  border: 1px solid var(--line);
+}
+.photo-editor-row > div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 10px;
+}
+.photo-editor-row button {
+  border: 0;
+  background: none;
+  color: var(--green);
+  text-decoration: underline;
+}
+.admin-login label,
+.admin-login small,
+.back-site {
+  font-size: 13px;
+}
+.admin-login input {
+  font-size: 16px;
+}
+
+@media (max-width: 950px) {
+  .invite-admin-grid {
+    grid-template-columns: 1fr;
+  }
+}
+@media (max-width: 680px) {
+  .dashboard aside nav button {
+    font-size: 12px;
+    padding: 11px 12px;
+  }
+  .dash-main > header {
+    align-items: flex-start;
+    gap: 12px;
+  }
+  .dash-main h1 {
+    font-size: 34px;
+  }
+  .dash-main > header .button {
+    font-size: 11px;
+  }
+  .metric-grid strong {
+    font-size: 38px;
+  }
+  .metric-grid span {
+    font-size: 11px;
+  }
+  .admin-bar-row {
+    grid-template-columns: 90px 1fr 28px;
+    gap: 8px;
+    font-size: 11px;
+  }
+  .table-tools > input {
+    max-width: none;
+  }
+  .admin-gifts article {
+    grid-template-columns: 54px 1fr;
+  }
+  .admin-gifts article > strong,
+  .admin-gifts article > span {
+    display: block;
+    grid-column: 2;
+  }
+  .gift-admin-actions {
+    grid-column: 1 / -1;
+  }
+  .section-heading {
+    flex-direction: column;
+  }
+  .admin-editor-modal .button {
+    font-size: 10px;
+    padding: 12px;
+  }
+}
