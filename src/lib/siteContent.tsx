@@ -131,6 +131,12 @@ export const defaultSiteContent: Record<string, string> = {
   gift_6_image: "https://images.unsplash.com/photo-1510812431401-41d2bd2722f3?auto=format&fit=crop&w=900&q=85",
 };
 
+const previousDefaultPhotos: Record<string, string> = {
+  photo_couple: "https://images.unsplash.com/photo-1789486525399-253e430b5446?auto=format&fit=crop&w=1600&q=86",
+  photo_greenhouse: "https://images.unsplash.com/photo-1748864688405-c2506003829f?auto=format&fit=crop&w=1400&q=85",
+  photo_garden: "https://images.unsplash.com/photo-1526071280296-b941175cec92?auto=format&fit=crop&w=1200&q=85",
+};
+
 type SiteContentValue = {
   content: Record<string, string>;
   loading: boolean;
@@ -180,10 +186,13 @@ export function SiteContentProvider({ children }: { children: ReactNode }) {
     setError("");
   }, []);
 
-  const value = useMemo(
-    () => ({ content: { ...defaultSiteContent, ...values }, loading, error, refresh, save }),
-    [values, loading, error, refresh, save],
-  );
+  const value = useMemo(() => {
+    const content = { ...defaultSiteContent, ...values };
+    for (const [key, previousPhoto] of Object.entries(previousDefaultPhotos)) {
+      if (content[key] === previousPhoto) content[key] = defaultSiteContent[key];
+    }
+    return { content, loading, error, refresh, save };
+  }, [values, loading, error, refresh, save]);
   useEffect(() => {
     document.title = value.content.site_title || defaultSiteContent.site_title;
   }, [value.content.site_title]);
