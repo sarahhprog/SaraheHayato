@@ -88,7 +88,7 @@ function Home({ go }: { go: (page: Page) => void }) {
         <p className="date-note">{text("home_countdown_description")}</p>
       </section>
       <section className="story-section">
-        <div className="story-photo frame"><img src={text("photo_greenhouse")} alt="Entrada de uma estufa botânica" /><span>01</span></div>
+        <div className="story-photo frame"><img src={text("photo_greenhouse")} alt="Sarah e Hayato juntos em uma celebração de fim de ano" /><span>01</span></div>
         <div className="story-copy">
           <p className="eyebrow">{text("story_section_title")}</p>
           <h2>{text("story_title")}</h2>
@@ -99,7 +99,7 @@ function Home({ go }: { go: (page: Page) => void }) {
       <section className="proposal-section">
         <Botanical className="proposal-leaf" />
         <div className="proposal-copy"><p className="eyebrow light">{text("proposal_eyebrow")}</p><h2>{text("proposal_title")}</h2><p>{text("proposal_text")}</p><p className="location">{text("proposal_location")}</p></div>
-        <div className="proposal-image"><img src={text("photo_garden")} alt="Jardim botânico e sua vegetação" /></div>
+        <div className="proposal-image"><img src={text("photo_garden")} alt="Ilustração do jardim botânico Hortus Botanicus em Amsterdam" /></div>
       </section>
       <section className="invitation"><p className="script">{text("home_invitation_eyebrow")}</p><h2>{text("home_invitation_title")}</h2><button className="button primary" onClick={() => go("rsvp")}>{text("nav_rsvp")}</button></section>
     </main>
