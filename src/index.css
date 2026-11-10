@@ -2270,3 +2270,180 @@ td {
     padding: 12px;
   }
 }
+
+.rsvp-form {
+  max-width: 720px;
+}
+.rsvp-form > label {
+  display: block;
+  margin: 0;
+  text-align: left;
+  font-size: 14px;
+}
+.rsvp-form > input {
+  min-height: 54px;
+  margin: 10px 0 20px;
+  font-size: 16px;
+}
+.rsvp-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  margin-top: 20px;
+}
+.rsvp-actions .button {
+  min-height: 56px;
+  font-size: 13px;
+}
+.rsvp-duplicate {
+  padding: 20px;
+  text-align: left;
+  background: #f0eadc;
+  border: 1px solid var(--line);
+}
+.rsvp-duplicate p {
+  font: 18px/1.5 "Cormorant Garamond";
+}
+.rsvp-duplicate .button {
+  margin: 0 10px 12px 0;
+}
+.rsvp-duplicate small {
+  display: block;
+  color: #5b635c;
+  font-size: 12px;
+  line-height: 1.5;
+}
+.rsvp-actions button:focus-visible,
+.rsvp-form input:focus-visible,
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 3px solid #a48646;
+  outline-offset: 3px;
+}
+.admin-user-email {
+  margin: auto 0 8px;
+  padding: 0 12px;
+  overflow-wrap: anywhere;
+  color: #d7dfd8;
+  font-size: 12px;
+}
+.guest-admin-counts {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 24px;
+}
+.guest-admin-counts > div {
+  padding: 16px;
+  background: #f1ede5;
+  border: 1px solid var(--line);
+}
+.guest-admin-counts span,
+.guest-admin-counts strong {
+  display: block;
+}
+.guest-admin-counts span {
+  font-size: 13px;
+}
+.guest-admin-counts strong {
+  color: var(--green);
+  font: 500 34px "Cormorant Garamond";
+}
+.guest-add-form {
+  display: grid;
+  grid-template-columns: 1fr minmax(220px, 2fr) auto;
+  align-items: end;
+  gap: 12px;
+  margin: 20px 0;
+}
+.guest-add-form label {
+  font-size: 14px;
+  font-weight: 600;
+}
+.guest-add-form input {
+  margin: 0;
+  font-size: 16px;
+}
+.guest-add-form .button {
+  min-height: 50px;
+}
+.status-select {
+  min-width: 125px;
+}
+.status-confirmado {
+  color: var(--green);
+  background: #dce7dd !important;
+}
+.status-nao_vai {
+  color: var(--wine);
+  background: #eedee0 !important;
+}
+.status-pending {
+  color: #66572c;
+  background: #efe7d4 !important;
+}
+.admin-content-section {
+  min-width: 0;
+  margin: 28px 0;
+  padding: 18px 22px;
+  border: 1px solid var(--line);
+}
+.admin-content-section legend {
+  padding: 0 8px;
+  color: var(--green);
+  font: 500 25px "Cormorant Garamond";
+}
+.admin-content-section label {
+  font-size: 14px;
+}
+.admin-content-section textarea {
+  min-height: 46px;
+  font-size: 15px;
+}
+.photo-editor-row h3 {
+  color: var(--green);
+  font: 500 24px "Cormorant Garamond";
+}
+.photo-editor-row input[type="file"] {
+  display: block;
+  margin-top: 10px;
+  font-size: 14px;
+}
+.photo-editor-row .button {
+  margin: 8px 8px 8px 0;
+}
+.admin-login form > label {
+  display: block;
+  font-size: 14px;
+  font-weight: 600;
+}
+.admin-login form > input {
+  margin: 8px 0 18px;
+}
+@media (max-width: 680px) {
+  .rsvp-actions,
+  .guest-add-form {
+    grid-template-columns: 1fr;
+  }
+  .guest-admin-counts {
+    gap: 6px;
+  }
+  .guest-admin-counts > div {
+    padding: 10px;
+  }
+  .guest-admin-counts span {
+    font-size: 11px;
+  }
+  .guest-admin-counts strong {
+    font-size: 28px;
+  }
+  .admin-table .section-heading {
+    align-items: flex-start;
+  }
+  .admin-content-section {
+    padding: 12px;
+  }
+}
