@@ -4,7 +4,24 @@ import Gifts from "./components/Gifts";
 import RSVP from "./components/RSVP";
 import { getSiteText, useSiteContent } from "./lib/siteContent";
 
-type Page = "home" | "rsvp" | "gifts" | "info" | "admin";
+type Page = "home" | "rsvp" | "gifts" | "info" | "admin" | "payment-success" | "payment-pending" | "payment-failure";
+
+const pagePaths: Record<Page, string> = {
+  home: "/",
+  rsvp: "/rsvp",
+  gifts: "/presentes",
+  info: "/informacoes",
+  admin: "/admin",
+  "payment-success": "/pagamento/sucesso",
+  "payment-pending": "/pagamento/pendente",
+  "payment-failure": "/pagamento/falha",
+};
+
+function pageFromPath(pathname: string): Page {
+  const normalizedPath = pathname.length > 1 ? pathname.replace(/\/+$/, "") : pathname;
+  const page = Object.entries(pagePaths).find(([, path]) => path === normalizedPath)?.[0] as Page | undefined;
+  return page ?? "home";
+}
 
 function Mark({ light = false }: { light?: boolean }) {
   return <div className={`mark ${light ? "mark-light" : ""}`}><span>S</span><i>&</i><span>H</span></div>;
@@ -185,18 +202,67 @@ function Footer({ go }: { go: (page: Page) => void }) {
   );
 }
 
+function PaymentReturn({ page, go }: { page: Page; go: (page: Page) => void }) {
+  // The return page is informational; only the signed webhook can confirm a purchase.
+  const [payerName] = useState(() => {
+    const savedName = sessionStorage.getItem("gift-payment-payer-name") || "";
+    sessionStorage.removeItem("gift-payment-payer-name");
+    return savedName;
+  });
+  const isSuccess = page === "payment-success";
+  const isPending = page === "payment-pending";
+  const title = isSuccess
+    ? `Obrigado${payerName ? `, ${payerName}` : ""}!`
+    : isPending
+      ? "Pagamento pendente"
+      : "Não foi possível concluir o pagamento";
+  const message = isSuccess
+    ? "Seu carinho significa muito para nós. A confirmação do pagamento acontece após a validação do Mercado Pago pelo nosso servidor."
+    : isPending
+      ? "O Mercado Pago ainda está processando o pagamento. O presente continuará disponível até a confirmação do servidor."
+      : "O pagamento não foi aprovado. Você pode voltar à lista e tentar novamente.";
+
+  return (
+    <main>
+      <section className="payment-return paper">
+        <p className="script">{isSuccess ? "com carinho" : isPending ? "um instante" : "não desanime"}</p>
+        <p className="eyebrow">Sarah & Hayato</p>
+        <h1>{title}</h1>
+        <p>{message}</p>
+        <button className="button primary" onClick={() => go("gifts")}>
+          {isSuccess ? "Voltar ao site" : isPending ? "Ver a lista de presentes" : "Tentar novamente"}
+        </button>
+      </section>
+    </main>
+  );
+}
+
 export default function App() {
-  const [page, setPage] = useState<Page>("home");
+  const [page, setPage] = useState<Page>(() => pageFromPath(window.location.pathname));
   const go = (next: Page) => {
+    if (window.location.pathname !== pagePaths[next]) {
+      window.history.pushState({ page: next }, "", pagePaths[next]);
+    }
     setPage(next);
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
+  useEffect(() => {
+    const handlePopState = () => {
+      setPage(pageFromPath(window.location.pathname));
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    };
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
+  }, []);
   const pages = {
     home: <Home go={go} />,
     rsvp: <RSVP />,
     gifts: <Gifts />,
     info: <Info />,
     admin: <Admin />,
+    "payment-success": <PaymentReturn page="payment-success" go={go} />,
+    "payment-pending": <PaymentReturn page="payment-pending" go={go} />,
+    "payment-failure": <PaymentReturn page="payment-failure" go={go} />,
   };
   return <div className="app">{page !== "admin" && <Header page={page} go={go} />}{pages[page]}{page !== "admin" && <Footer go={go} />}</div>;
 }

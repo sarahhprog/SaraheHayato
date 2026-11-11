@@ -744,10 +744,34 @@ textarea:focus {
   font-size: 8px;
   letter-spacing: 0.12em;
 }
+.gift-card h2,
 .gift-card h3 {
   font: 500 27px "Cormorant Garamond";
   color: var(--green);
   margin-bottom: 8px;
+}
+.gift-card.is-unavailable {
+  opacity: 0.72;
+}
+.gift-card.is-unavailable .gift-image img {
+  filter: grayscale(0.65) saturate(0.45);
+}
+.gift-image .gift-status-badge {
+  left: 12px;
+  top: 12px;
+  background: var(--wine);
+  color: var(--paper);
+  padding: 8px 10px;
+  font-size: 9px;
+  letter-spacing: 0.13em;
+}
+.gift-list-message {
+  max-width: 580px;
+  margin: 20px auto;
+  text-align: center;
+}
+.gift-list-message .button {
+  margin-top: 12px;
 }
 .gift-desc {
   font: 14px/1.5 "Cormorant Garamond";
@@ -789,6 +813,56 @@ textarea:focus {
   background: var(--paper);
   padding: clamp(30px, 5vw, 55px);
   position: relative;
+}
+.payment-modal > p:not(.eyebrow) {
+  margin-bottom: 20px;
+}
+.gift-payment-form {
+  display: grid;
+  gap: 10px;
+  margin-top: 24px;
+}
+.gift-payment-form label {
+  color: var(--green);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.gift-payment-form input,
+.gift-payment-form textarea {
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 0;
+  background: #fffdf8;
+  color: var(--ink);
+  padding: 12px 14px;
+  outline-color: var(--gold);
+}
+.gift-payment-form textarea {
+  resize: vertical;
+  min-height: 110px;
+}
+.gift-payment-form .form-error {
+  margin: 4px 0;
+}
+.payment-return {
+  min-height: 62vh;
+  padding: clamp(70px, 12vw, 150px) 24px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+}
+.payment-return h1 {
+  font: 500 clamp(42px, 7vw, 76px)/1.05 "Cormorant Garamond";
+  color: var(--green);
+  margin-bottom: 20px;
+}
+.payment-return > p:not(.script):not(.eyebrow) {
+  max-width: 620px;
+  margin-bottom: 30px;
 }
 .modal-close {
   position: absolute;
@@ -2445,5 +2519,124 @@ textarea:focus-visible {
   }
   .admin-content-section {
     padding: 12px;
+  }
+}
+.gift-admin {
+  display: grid;
+  gap: 24px;
+}
+.gift-admin-summary {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+}
+.gift-admin-summary article {
+  min-width: 0;
+  padding: 18px;
+  background: var(--paper);
+  border: 1px solid var(--line);
+}
+.gift-admin-summary article span,
+.gift-admin-summary article strong {
+  display: block;
+}
+.gift-admin-summary article span {
+  font-size: 12px;
+}
+.gift-admin-summary article strong {
+  margin-top: 6px;
+  color: var(--green);
+  font: 500 28px "Cormorant Garamond";
+  overflow-wrap: anywhere;
+}
+.gift-admin-summary .needs-attention {
+  border-color: var(--terra);
+  background: #f3e7df;
+}
+.admin-gift-form {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+.admin-gift-form label {
+  display: grid;
+  gap: 6px;
+  color: var(--green);
+  font-size: 12px;
+  font-weight: 600;
+}
+.admin-gift-form input,
+.admin-gift-form textarea {
+  width: 100%;
+  min-width: 0;
+  margin: 0;
+  border: 1px solid var(--line);
+  background: #fffdf8;
+  color: var(--ink);
+  padding: 11px 12px;
+  font: 14px Montserrat, sans-serif;
+}
+.admin-gift-form textarea {
+  resize: vertical;
+}
+.admin-gift-form-actions {
+  grid-column: 1 / -1;
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.gift-admin-description {
+  display: block;
+  max-width: 260px;
+  color: #777d76;
+  font-size: 11px;
+}
+.gift-admin-message {
+  min-width: 180px;
+  max-width: 300px;
+  white-space: normal;
+}
+.gift-admin-status {
+  display: inline-block;
+  padding: 4px 8px;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  white-space: nowrap;
+}
+.gift-admin-status.available {
+  color: var(--green);
+  background: #dce7dd;
+}
+.gift-admin-status.unavailable {
+  color: var(--wine);
+  background: #eedee0;
+}
+.gift-admin-alert {
+  border: 2px solid rgba(179, 94, 67, 0.55);
+}
+.gift-duplicate-row {
+  background: #f5e8e2;
+}
+@media (max-width: 950px) {
+  .gift-admin-summary {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 680px) {
+  .gift-admin-summary {
+    gap: 8px;
+  }
+  .gift-admin-summary article {
+    padding: 12px;
+  }
+  .gift-admin-summary article strong {
+    font-size: 23px;
+  }
+  .admin-gift-form {
+    grid-template-columns: 1fr;
+  }
+  .admin-gift-form-actions {
+    grid-column: auto;
   }
 }

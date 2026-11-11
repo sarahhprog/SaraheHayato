@@ -10,6 +10,39 @@ type Guest = {
   created_at: string;
   updated_at: string;
 };
+type AdminGift = {
+  id: string;
+  name: string;
+  description: string;
+  image_url: string;
+  price: number;
+  status: "available" | "unavailable";
+};
+type GiftPurchase = {
+  id: string;
+  gift_id: string;
+  payer_name: string;
+  message: string;
+  amount_paid: number;
+  mp_payment_id: string;
+  purchased_at: string;
+};
+type GiftPaymentAttempt = {
+  id: string;
+  gift_id: string;
+  payer_name: string;
+  message: string;
+  amount: number;
+  status: string;
+  mp_payment_id: string | null;
+  created_at: string;
+};
+type GiftDraft = {
+  name: string;
+  description: string;
+  image_url: string;
+  price: string;
+};
 
 const contentSections = [
   {
@@ -26,7 +59,7 @@ const contentSections = [
   },
   {
     title: "Lista de presentes",
-    keys: ["gifts_eyebrow", "gifts_title", "gifts_intro", "gift_button", "gift_modal_title", "gift_modal_text", "gift_modal_close", "gift_1_name", "gift_1_category", "gift_1_price", "gift_1_description", "gift_2_name", "gift_2_category", "gift_2_price", "gift_2_description", "gift_3_name", "gift_3_category", "gift_3_price", "gift_3_description", "gift_4_name", "gift_4_category", "gift_4_price", "gift_4_description", "gift_5_name", "gift_5_category", "gift_5_price", "gift_5_description", "gift_6_name", "gift_6_category", "gift_6_price", "gift_6_description"],
+    keys: ["gifts_eyebrow", "gifts_title", "gifts_intro"],
   },
   {
     title: "Informações, trajes e perguntas frequentes",
@@ -67,6 +100,35 @@ function formatStatus(status: GuestStatus) {
   if (status === "confirmado") return "Confirmado";
   if (status === "nao_vai") return "Não vai";
   return "Sem resposta";
+}
+
+function giftStatusLabel(status: AdminGift["status"]) {
+  return status === "available" ? "Disponível" : "Indisponível";
+}
+
+function paymentAttemptLabel(status: string) {
+  const labels: Record<string, string> = {
+    pending: "Pendente",
+    in_process: "Em processamento",
+    approved: "Aprovado",
+    rejected: "Recusado",
+    cancelled: "Cancelado",
+    refunded: "Reembolsado",
+    charged_back: "Contestação",
+    duplicate_refund_required: "Duplicado — precisa de reembolso",
+    amount_mismatch: "Valor divergente — verificar",
+    preference_failed: "Falha ao criar pagamento",
+    other: "Outro status",
+  };
+  return labels[status] || status;
+}
+
+function formatCurrency(value: number) {
+  return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(value);
+}
+
+function formatAdminDate(value: string) {
+  return new Intl.DateTimeFormat("pt-BR", { dateStyle: "short", timeStyle: "short" }).format(new Date(value));
 }
 
 function compressImage(file: File): Promise<Blob> {
@@ -119,6 +181,13 @@ export default function Admin() {
   const [newName, setNewName] = useState("");
   const [draftContent, setDraftContent] = useState<Record<string, string>>({});
   const [photoDrafts, setPhotoDrafts] = useState<Record<string, { file?: File; preview?: string; remove?: boolean }>>({});
+  const [adminGifts, setAdminGifts] = useState<AdminGift[]>([]);
+  const [giftPurchases, setGiftPurchases] = useState<GiftPurchase[]>([]);
+  const [giftAttempts, setGiftAttempts] = useState<GiftPaymentAttempt[]>([]);
+  const [giftDataLoading, setGiftDataLoading] = useState(false);
+  const [giftError, setGiftError] = useState("");
+  const [giftDraft, setGiftDraft] = useState<GiftDraft>({ name: "", description: "", image_url: "", price: "" });
+  const [editingGiftId, setEditingGiftId] = useState<string | null>(null);
 
   const fetchGuests = useCallback(async () => {
     if (!supabase) return;
@@ -130,6 +199,27 @@ export default function Admin() {
       setGuestError("");
     }
     setGuestLoading(false);
+  }, []);
+
+  const fetchGiftData = useCallback(async () => {
+    if (!supabase) return;
+    setGiftDataLoading(true);
+    const [giftsResult, purchasesResult, attemptsResult] = await Promise.all([
+      supabase.from("gifts").select("id,name,description,image_url,price,status").order("name"),
+      supabase.from("gift_purchases").select("id,gift_id,payer_name,message,amount_paid,mp_payment_id,purchased_at").order("purchased_at", { ascending: false }),
+      supabase.from("gift_payment_attempts").select("id,gift_id,payer_name,message,amount,status,mp_payment_id,created_at").order("created_at", { ascending: false }),
+    ]);
+
+    const firstError = giftsResult.error || purchasesResult.error || attemptsResult.error;
+    if (firstError) {
+      setGiftError(`Não foi possível carregar os dados dos presentes: ${firstError.message}`);
+    } else {
+      setAdminGifts((giftsResult.data ?? []) as AdminGift[]);
+      setGiftPurchases((purchasesResult.data ?? []) as GiftPurchase[]);
+      setGiftAttempts((attemptsResult.data ?? []) as GiftPaymentAttempt[]);
+      setGiftError("");
+    }
+    setGiftDataLoading(false);
   }, []);
 
   useEffect(() => {
@@ -162,8 +252,11 @@ export default function Admin() {
   }, []);
 
   useEffect(() => {
-    if (userEmail) void fetchGuests();
-  }, [userEmail, fetchGuests]);
+    if (userEmail) {
+      void fetchGuests();
+      void fetchGiftData();
+    }
+  }, [userEmail, fetchGuests, fetchGiftData]);
 
   useEffect(() => {
     setDraftContent(content);
@@ -186,6 +279,9 @@ export default function Admin() {
   const responseCount = guests.filter((guest) => guest.status !== null).length;
   const confirmedCount = guests.filter((guest) => guest.status === "confirmado").length;
   const declinedCount = guests.filter((guest) => guest.status === "nao_vai").length;
+  const totalGiftAmount = giftPurchases.reduce((total, purchase) => total + Number(purchase.amount_paid), 0);
+  const pendingGiftAttempts = giftAttempts.filter((attempt) => ["pending", "in_process"].includes(attempt.status));
+  const flaggedGiftAttempts = giftAttempts.filter((attempt) => ["duplicate_refund_required", "amount_mismatch"].includes(attempt.status));
 
   const signIn = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -212,6 +308,9 @@ export default function Admin() {
     else {
       setUserEmail("");
       setGuests([]);
+      setAdminGifts([]);
+      setGiftPurchases([]);
+      setGiftAttempts([]);
       setNotice("");
     }
   };
@@ -259,6 +358,79 @@ export default function Admin() {
     else {
       setGuests((current) => current.filter((item) => item.id !== guest.id));
       setNotice("Convidado excluído.");
+    }
+  };
+
+  const saveGift = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!supabase) return;
+    const name = giftDraft.name.trim().replace(/\s+/g, " ");
+    const description = giftDraft.description.trim();
+    const imageUrl = giftDraft.image_url.trim();
+    const priceValue = Number(giftDraft.price.replace(",", "."));
+    if (Array.from(name).length < 2 || Array.from(name).length > 120) {
+      setGiftError("O nome do presente deve ter de 2 a 120 caracteres.");
+      return;
+    }
+    if (description.length < 1 || description.length > 500) {
+      setGiftError("A descrição deve ter até 500 caracteres.");
+      return;
+    }
+    if (!imageUrl) {
+      setGiftError("Informe a URL da imagem do presente.");
+      return;
+    }
+    try {
+      const parsedImageUrl = new URL(imageUrl, window.location.origin);
+      if (!["http:", "https:"].includes(parsedImageUrl.protocol)) {
+        setGiftError("Use uma imagem com endereço HTTP ou HTTPS.");
+        return;
+      }
+    } catch {
+      setGiftError("Informe uma URL de imagem válida.");
+      return;
+    }
+    if (!Number.isFinite(priceValue) || priceValue <= 0 || !/^\d+(?:[.,]\d{1,2})?$/.test(giftDraft.price.trim())) {
+      setGiftError("Informe um valor positivo com até duas casas decimais.");
+      return;
+    }
+
+    setBusy(true);
+    setGiftError("");
+    const values = { name, description, image_url: imageUrl, price: priceValue };
+    const result = editingGiftId
+      ? await supabase.from("gifts").update(values).eq("id", editingGiftId)
+      : await supabase.from("gifts").insert(values);
+    if (result.error) {
+      setGiftError(`Não foi possível salvar o presente: ${result.error.message}`);
+    } else {
+      setGiftDraft({ name: "", description: "", image_url: "", price: "" });
+      setEditingGiftId(null);
+      setNotice(editingGiftId ? "Presente atualizado." : "Presente criado.");
+      await fetchGiftData();
+    }
+    setBusy(false);
+  };
+
+  const editGift = (gift: AdminGift) => {
+    setEditingGiftId(gift.id);
+    setGiftDraft({
+      name: gift.name,
+      description: gift.description,
+      image_url: gift.image_url,
+      price: String(gift.price),
+    });
+    setGiftError("");
+  };
+
+  const deleteGift = async (gift: AdminGift) => {
+    if (!supabase || !window.confirm(`Apagar "${gift.name}"? Presentes com compra ou tentativa vinculada não podem ser apagados.`)) return;
+    const { error } = await supabase.from("gifts").delete().eq("id", gift.id);
+    if (error) {
+      setGiftError(`Não foi possível apagar o presente. Compras ou tentativas vinculadas impedem a exclusão. ${error.message}`);
+    } else {
+      setNotice("Presente apagado.");
+      await fetchGiftData();
     }
   };
 
@@ -342,18 +514,12 @@ export default function Admin() {
     );
   }
 
-  const tabs = ["Visão geral", "Convidados", "Conteúdo", "Fotos"];
+  const tabs = ["Visão geral", "Convidados", "Presentes", "Conteúdo", "Fotos"];
   const photoFields = [
     ["photo_couple", "Foto principal"],
     ["photo_greenhouse", "Foto da história"],
     ["photo_garden", "Foto do pedido"],
     ["photo_table", "Foto da celebração"],
-    ["gift_1_image", "Foto do presente 1"],
-    ["gift_2_image", "Foto do presente 2"],
-    ["gift_3_image", "Foto do presente 3"],
-    ["gift_4_image", "Foto do presente 4"],
-    ["gift_5_image", "Foto do presente 5"],
-    ["gift_6_image", "Foto do presente 6"],
   ];
 
   return (
@@ -379,6 +545,51 @@ export default function Admin() {
           {guestError && <p className="form-error" role="alert">{guestError}</p>}
           {guestLoading ? <p>Carregando convidados…</p> : <div className="table-scroll"><table><thead><tr><th>Nome</th><th>Status</th><th>Data/hora da resposta</th><th>Ações</th></tr></thead><tbody>{filteredGuests.map((guest) => <tr key={guest.id}><td>{editingId === guest.id ? <input aria-label={`Editar nome de ${guest.name}`} value={editingName} onChange={(event) => setEditingName(event.target.value)} /> : guest.name}</td><td><select aria-label={`Status de ${guest.name}`} className={`status-select status-${guest.status || "pending"}`} value={guest.status || ""} onChange={(event) => void updateGuest(guest, { status: (event.target.value || null) as GuestStatus })}><option value="">Sem resposta</option><option value="confirmado">Confirmado</option><option value="nao_vai">Não vai</option></select></td><td>{guest.status ? new Intl.DateTimeFormat("pt-BR", { dateStyle: "short", timeStyle: "short" }).format(new Date(guest.updated_at)) : "—"}</td><td className="table-actions">{editingId === guest.id ? <><button onClick={() => void updateGuest(guest, { name: editingName })}>Salvar</button><button onClick={() => setEditingId(null)}>Cancelar</button></> : <button onClick={() => { setEditingId(guest.id); setEditingName(guest.name); }}>Editar nome</button>}<button className="delete" onClick={() => void deleteGuest(guest)}>Excluir</button></td></tr>)}</tbody></table>{filteredGuests.length === 0 && <p>Nenhum convidado encontrado.</p>}</div>}
         </article>}
+        {tab === "Presentes" && <section className="gift-admin">
+          <div className="gift-admin-summary">
+            <article><span>Total arrecadado</span><strong>{formatCurrency(totalGiftAmount)}</strong></article>
+            <article><span>Compras confirmadas</span><strong>{giftPurchases.length}</strong></article>
+            <article><span>Pagamentos pendentes</span><strong>{pendingGiftAttempts.length}</strong></article>
+            <article className={flaggedGiftAttempts.length ? "needs-attention" : ""}><span>Pagamentos a revisar</span><strong>{flaggedGiftAttempts.length}</strong></article>
+          </div>
+          <article className="admin-table">
+            <div className="section-heading">
+              <div><h2>{editingGiftId ? "Editar presente" : "Adicionar presente"}</h2><p>O status é alterado exclusivamente após confirmação do pagamento pelo servidor.</p></div>
+            </div>
+            <form className="admin-gift-form" onSubmit={(event) => void saveGift(event)}>
+              <label htmlFor="gift-name">Nome<input id="gift-name" required minLength={2} maxLength={120} value={giftDraft.name} onChange={(event) => setGiftDraft((current) => ({ ...current, name: event.target.value }))} /></label>
+              <label htmlFor="gift-description">Descrição curta<textarea id="gift-description" required maxLength={500} rows={2} value={giftDraft.description} onChange={(event) => setGiftDraft((current) => ({ ...current, description: event.target.value }))} /></label>
+              <label htmlFor="gift-image-url">URL da imagem<input id="gift-image-url" required value={giftDraft.image_url} onChange={(event) => setGiftDraft((current) => ({ ...current, image_url: event.target.value }))} /></label>
+              <label htmlFor="gift-price">Valor em R$<input id="gift-price" required inputMode="decimal" placeholder="120,00" value={giftDraft.price} onChange={(event) => setGiftDraft((current) => ({ ...current, price: event.target.value }))} /></label>
+              {giftError && <p className="form-error" role="alert">{giftError}</p>}
+              <div className="admin-gift-form-actions">
+                <button className="button primary" disabled={busy}>{busy ? "Salvando…" : editingGiftId ? "Salvar alterações" : "Criar presente"}</button>
+                {editingGiftId && <button className="button ghost" type="button" onClick={() => { setEditingGiftId(null); setGiftDraft({ name: "", description: "", image_url: "", price: "" }); setGiftError(""); }}>Cancelar edição</button>}
+              </div>
+            </form>
+          </article>
+          <article className="admin-table">
+            <div className="section-heading"><div><h2>Presentes e compras confirmadas</h2><p>Os dados de compradores e mensagens são visíveis somente nesta área autenticada.</p></div><button className="button ghost" onClick={() => void fetchGiftData()}>Atualizar</button></div>
+            {giftDataLoading ? <p>Carregando presentes e pagamentos…</p> : giftError ? <p className="form-error" role="alert">{giftError}</p> : <div className="table-scroll"><table><thead><tr><th>Presente</th><th>Status</th><th>Quem presenteou</th><th>Mensagem</th><th>Valor pago</th><th>Data</th><th>Ações</th></tr></thead><tbody>
+              {adminGifts.map((gift) => {
+                const purchase = giftPurchases.find((item) => item.gift_id === gift.id);
+                return <tr key={gift.id}><td>{gift.name}<small className="gift-admin-description">{gift.description}</small></td><td><span className={`gift-admin-status ${gift.status}`}>{giftStatusLabel(gift.status)}</span></td><td>{purchase?.payer_name || "—"}</td><td className="gift-admin-message">{purchase?.message || "—"}</td><td>{purchase ? formatCurrency(Number(purchase.amount_paid)) : "—"}</td><td>{purchase ? formatAdminDate(purchase.purchased_at) : "—"}</td><td className="table-actions"><button onClick={() => editGift(gift)}>Editar</button><button className="delete" onClick={() => void deleteGift(gift)}>Apagar</button></td></tr>;
+              })}
+            </tbody></table>{adminGifts.length === 0 && <p>Nenhum presente cadastrado.</p>}</div>}
+          </article>
+          <article className="admin-table">
+            <div className="section-heading"><div><h2>Pagamentos pendentes</h2><p>Pagamentos ainda não aprovados não reservam nem indisponibilizam presentes.</p></div></div>
+            {pendingGiftAttempts.length ? <div className="table-scroll"><table><thead><tr><th>Presente</th><th>Nome</th><th>Mensagem</th><th>Valor</th><th>Status</th><th>Iniciada em</th></tr></thead><tbody>
+              {pendingGiftAttempts.map((attempt) => <tr key={attempt.id}><td>{adminGifts.find((gift) => gift.id === attempt.gift_id)?.name || "Presente removido"}</td><td>{attempt.payer_name}</td><td className="gift-admin-message">{attempt.message}</td><td>{formatCurrency(Number(attempt.amount))}</td><td>{paymentAttemptLabel(attempt.status)}</td><td>{formatAdminDate(attempt.created_at)}</td></tr>)}
+            </tbody></table></div> : <p>Nenhum pagamento pendente.</p>}
+          </article>
+          <article className="admin-table gift-admin-alert">
+            <div className="section-heading"><div><h2>Pagamentos duplicados ou divergentes</h2><p>Confira no Mercado Pago e faça o reembolso manual quando necessário.</p></div></div>
+            {flaggedGiftAttempts.length ? <div className="table-scroll"><table><thead><tr><th>Presente</th><th>Nome</th><th>Mensagem</th><th>Valor</th><th>Pagamento</th><th>Status</th><th>Data</th></tr></thead><tbody>
+              {flaggedGiftAttempts.map((attempt) => <tr className="gift-duplicate-row" key={attempt.id}><td>{adminGifts.find((gift) => gift.id === attempt.gift_id)?.name || "Presente removido"}</td><td>{attempt.payer_name}</td><td className="gift-admin-message">{attempt.message}</td><td>{formatCurrency(Number(attempt.amount))}</td><td>{attempt.mp_payment_id || "—"}</td><td>{paymentAttemptLabel(attempt.status)}</td><td>{formatAdminDate(attempt.created_at)}</td></tr>)}
+            </tbody></table></div> : <p>Nenhum pagamento precisa de revisão.</p>}
+          </article>
+        </section>}
         {tab === "Conteúdo" && <form className="content-editor" onSubmit={saveTextContent}>
           <h2>Textos e informações do site</h2>
           <p>Campos vazios usam o conteúdo original. As alterações são publicadas após salvar.</p>
